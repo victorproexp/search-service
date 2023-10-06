@@ -1,0 +1,26 @@
+﻿.search-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.search-bar {
+    flex-direction: row;
+    margin-bottom: 16px;
+}
+
+h1 {
+    color: #008CBA;
+}
+
+button {
+    background-color: #008CBA;
+    border: none;
+    color: white;
+    height: 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}

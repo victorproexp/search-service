@@ -1,0 +1,53 @@
+﻿@page "/"
+@inject ISearchService SearchService
+
+<div class="search-box">
+    <h1>Mail Search</h1>
+    <div class="search-bar">
+        <input placeholder="Search for Mails" @bind="query" />
+        <button @onclick="Search">Search</button>
+    </div>
+    <div class="search-result">
+        @if (searchResult != null)
+        {
+            if (searchResult.Hits == 0)
+            {
+                <p>Your search - <b>@string.Join(", ", searchResult.Query)</b> - did not match any mails.</p>
+            }
+            else
+            {
+                <p>Query: [@string.Join(", ", searchResult.Query)]</p>
+                <p>Hits: @searchResult.Hits</p>
+                <p>Documents:</p>
+                <ol>
+                    @foreach (var doc in searchResult.DocumentHits)
+                    {
+                        <li>
+                            @doc.Document.Url <em style="color: #808080">contains @doc.NoOfHits search term(s)</em>
+                        </li>
+                    }
+                </ol>
+                if (searchResult.Ignored.Any())
+                {
+                    <p>Ignored: [@string.Join(", ", searchResult.Ignored)]</p>
+                }
+                <p>Time used: @(searchResult.TimeUsed.TotalMilliseconds)ms</p>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    string query = string.Empty;
+
+    SearchResult? searchResult = null;
+
+    private async Task Search()
+    {
+        query = query.Replace(" ", ",");
+
+        searchResult = await SearchService.GetSearchResultAsync(query);
+
+        query = string.Empty;
+    }
+}
