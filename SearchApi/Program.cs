@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-using ConsoleSearch;
+using SearchApi.Services;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
