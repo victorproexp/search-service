@@ -1,7 +1,4 @@
-using System;
-using Shared.BE;
-
-namespace ConsoleSearch
+namespace SearchApi.Models
 {
     /**
      * A class used to represent a document together with a

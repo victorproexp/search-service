@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Shared;
-using Shared.BE;
 using Microsoft.Data.Sqlite;
+using SearchApi.Models;
 
-namespace ConsoleSearch
+namespace SearchApi.Database
 {
     public class Database : IDatabase
     {

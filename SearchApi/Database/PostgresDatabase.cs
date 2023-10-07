@@ -1,8 +1,8 @@
 using Shared;
-using Shared.BE;
 using Npgsql;
+using SearchApi.Models;
 
-namespace ConsoleSearch
+namespace SearchApi.Database
 {
     public class PostgresDatabase : IDatabase
     {
@@ -36,25 +36,6 @@ namespace ConsoleSearch
                     res.Add(new KeyValuePair<int, int>(docId, count));
                 }
             }
-
-            return res;
-        }
-
-        /**
-         * will return x as a ',' separated string. For instance
-         * will AsString([1,2,3]) return "(1,2,3)".
-         */
-        private string AsString(List<int> x)
-        {
-            string res = "(";
-
-            for (int i = 0; i < x.Count - 1; i++)
-                res += x[i] + ",";
-
-            if (x.Count > 0)
-                res += x[x.Count - 1];
-
-            res += ")";
 
             return res;
         }

@@ -1,5 +1,4 @@
-﻿using System;
-namespace WebSearch
+﻿namespace WebSearch
 {
     /**
      * A class used to represent a document together with a

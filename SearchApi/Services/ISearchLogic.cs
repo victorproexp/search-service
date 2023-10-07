@@ -1,4 +1,6 @@
-namespace ConsoleSearch
+using SearchApi.Models;
+
+namespace SearchApi.Services
 {
     public interface ISearchLogic
     {

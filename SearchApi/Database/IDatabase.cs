@@ -1,6 +1,6 @@
-﻿using Shared.BE;
+﻿using SearchApi.Models;
 
-namespace ConsoleSearch
+namespace SearchApi.Database
 {
     public interface IDatabase
     {

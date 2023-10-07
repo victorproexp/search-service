@@ -1,5 +1,4 @@
-using System;
-namespace Shared.BE
+namespace SearchApi.Models
 {
     public class BEDocument
     {

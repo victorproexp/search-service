@@ -1,5 +1,4 @@
-﻿using System;
-namespace WebSearch
+﻿namespace WebSearch
 {
     public class BEDocument
     {

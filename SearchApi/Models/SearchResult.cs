@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace ConsoleSearch
+namespace SearchApi.Models
 {
     /*
      * A data class representing the result of a search.

@@ -1,5 +1,4 @@
-﻿using System;
-namespace WebSearch
+﻿namespace WebSearch
 {
     /*
      * A data class representing the result of a search.

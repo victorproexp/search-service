@@ -1,4 +1,7 @@
-namespace ConsoleSearch
+using SearchApi.Models;
+using SearchApi.Database;
+
+namespace SearchApi.Services
 {
     public class SearchLogic : ISearchLogic
     {
@@ -11,13 +14,12 @@ namespace ConsoleSearch
         {
             mDatabase = new PostgresDatabase();
             mWords = mDatabase.GetAllWords();
-            Console.WriteLine(mWords.First());
         }
 
         /* Perform search of documents containing words from query. The result will
          * contain details about up to maxAmount of documents.
          */
-        public SearchResult Search(String[] query, int maxAmount)
+        public SearchResult Search(string[] query, int maxAmount)
         {
             DateTime start = DateTime.Now;
 
@@ -43,7 +45,7 @@ namespace ConsoleSearch
             return new SearchResult(query, docIds.Count, docresult, ignored, DateTime.Now - start);
         }
 
-        private List<int> GetWordIds(String[] query, out List<string> outIgnored)
+        private List<int> GetWordIds(string[] query, out List<string> outIgnored)
         {
             var res = new List<int>();
             var ignored = new List<string>();
@@ -58,7 +60,5 @@ namespace ConsoleSearch
             outIgnored = ignored;
             return res;
         }
-
-
     }
 }

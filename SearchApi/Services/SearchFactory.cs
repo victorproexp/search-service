@@ -1,5 +1,4 @@
-using System;
-namespace ConsoleSearch
+namespace SearchApi.Services
 {
 	public class SearchFactory
 	{
