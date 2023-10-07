@@ -1,21 +1,17 @@
-using System;
-using System.Collections.Generic;
-using Shared.BE;
-
 namespace ConsoleSearch
 {
     public class SearchLogic : ISearchLogic
     {
-        Database mDatabase;
+        readonly IDatabase mDatabase;
 
         // a cache for all words in the documents
-        Dictionary<string, int> mWords;
+        readonly Dictionary<string, int> mWords;
 
         public SearchLogic()
         {
-            mDatabase = new();
+            mDatabase = new PostgresDatabase();
             mWords = mDatabase.GetAllWords();
-
+            Console.WriteLine(mWords.First());
         }
 
         /* Perform search of documents containing words from query. The result will
@@ -23,12 +19,10 @@ namespace ConsoleSearch
          */
         public SearchResult Search(String[] query, int maxAmount)
         {
-            List<string> ignored;
-
             DateTime start = DateTime.Now;
 
             // Convert words to wordids
-            var wordIds = GetWordIds(query, out ignored);
+            var wordIds = GetWordIds(query, out List<string> ignored);
 
             // perform the search - get all docIds
             var docIds = mDatabase.GetDocuments(wordIds);

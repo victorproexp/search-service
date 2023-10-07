@@ -6,7 +6,7 @@ using Microsoft.Data.Sqlite;
 
 namespace ConsoleSearch
 {
-    public class Database
+    public class Database : IDatabase
     {
         private SqliteConnection _connection;
         public Database()
