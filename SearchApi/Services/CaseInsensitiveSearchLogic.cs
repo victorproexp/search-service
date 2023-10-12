@@ -5,62 +5,33 @@ namespace SearchApi.Services
 {
     public class CaseInsensitiveSearchLogic : ISearchLogic
     {
-        readonly CaseInsensitivePostgresDatabase mDatabase;
+        private readonly CaseInsensitivePostgresDatabase mDatabase;
+        private readonly IWordManager mWordManager;
 
-        // a cache for all words in the documents
-        readonly Dictionary<string, List<int>> mWords;
-
-        public CaseInsensitiveSearchLogic()
+        public CaseInsensitiveSearchLogic(CaseInsensitivePostgresDatabase caseInsensitivePostgresDatabase)
         {
-            mDatabase = new CaseInsensitivePostgresDatabase();
-            mWords = mDatabase.GetAllWordsCaseInsensitive();
+            mDatabase = caseInsensitivePostgresDatabase;
+            mWordManager = new CaseInsensitiveWordManager(mDatabase.GetAllWordsCaseInsensitive());
         }
 
-        /* Perform search of documents containing words from query. The result will
-         * contain details about up to maxAmount of documents.
-         */
         public SearchResult Search(string[] query, int maxAmount)
         {
             DateTime start = DateTime.Now;
 
-            // Normalize query words to lowercase for case-insensitive matching
             var normalizedQuery = query.Select(q => q.ToLower()).ToArray();
+            var wordIds = mWordManager.GetWordIds(normalizedQuery, out List<string> ignored);
 
-            // Convert words to wordids
-            var wordIds = GetWordIds(normalizedQuery, out List<string> ignored);
-
-            // perform the search - get all docIds
             var docIds = mDatabase.postgresDatabase.GetDocuments(wordIds);
 
-            // get ids for the first maxAmount             
-            var top = new List<int>();
-            foreach (var p in docIds.GetRange(0, Math.Min(maxAmount, docIds.Count)))
-                top.Add(p.Key);
+            var top = docIds.Take(Math.Min(maxAmount, docIds.Count))
+                        .Select(p => p.Key)
+                        .ToList();
 
-            // compose the result.
-            // all the documentHit
-            List<DocumentHit> docresult = new();
-            int idx = 0;
-            foreach (var doc in mDatabase.postgresDatabase.GetDocDetails(top))
-                docresult.Add(new DocumentHit(doc, docIds[idx++].Value));
+            var docDetails = mDatabase.postgresDatabase.GetDocDetails(top);
+            var docResults = docDetails.Select((doc, idx) => new DocumentHit(doc, docIds[idx].Value))
+                                    .ToList();
 
-            return new SearchResult(query, docIds.Count, docresult, ignored, DateTime.Now - start);
-        }
-
-        private List<int> GetWordIds(string[] query, out List<string> outIgnored)
-        {
-            var res = new List<int>();
-            var ignored = new List<string>();
-
-            foreach (var aWord in query)
-            {
-                if (mWords.ContainsKey(aWord))
-                    res.AddRange(mWords[aWord]); // Handle duplicates
-                else
-                    ignored.Add(aWord);
-            }
-            outIgnored = ignored;
-            return res;
+            return new SearchResult(query, docIds.Count, docResults, ignored, DateTime.Now - start);
         }
     }
 }

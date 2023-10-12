@@ -1,64 +1,36 @@
-using SearchApi.Models;
 using SearchApi.Database;
+using SearchApi.Models;
 
 namespace SearchApi.Services
 {
     public class SearchLogic : ISearchLogic
     {
-        readonly IDatabase mDatabase;
+        private readonly IDatabase mDatabase;
+        private readonly IWordManager mWordManager;
 
-        // a cache for all words in the documents
-        readonly Dictionary<string, int> mWords;
-
-        public SearchLogic()
+        public SearchLogic(IDatabase database)
         {
-            mDatabase = new PostgresDatabase();
-            mWords = mDatabase.GetAllWords();
+            mDatabase = database;
+            mWordManager = new WordManager(mDatabase.GetAllWords());
         }
 
-        /* Perform search of documents containing words from query. The result will
-         * contain details about up to maxAmount of documents.
-         */
         public SearchResult Search(string[] query, int maxAmount)
         {
             DateTime start = DateTime.Now;
+            
+            var wordIds = mWordManager.GetWordIds(query, out List<string> ignored);
 
-            // Convert words to wordids
-            var wordIds = GetWordIds(query, out List<string> ignored);
-
-            // perform the search - get all docIds
             var docIds = mDatabase.GetDocuments(wordIds);
 
-            // get ids for the first maxAmount             
-            var top = new List<int>();
-            foreach (var p in docIds.GetRange(0, Math.Min(maxAmount, docIds.Count)))
-                top.Add(p.Key);
+            var top = docIds.Take(Math.Min(maxAmount, docIds.Count))
+                          .Select(p => p.Key)
+                          .ToList();
 
-            // compose the result.
-            // all the documentHit
-            List<DocumentHit> docresult = new List<DocumentHit>();
-            int idx = 0;
-            foreach (var doc in mDatabase.GetDocDetails(top))
-                docresult.Add(new DocumentHit(doc, docIds[idx++].Value));
+            var docDetails = mDatabase.GetDocDetails(top);
+            var docResults = docDetails.Select((doc, idx) => new DocumentHit(doc, docIds[idx].Value))
+                                      .ToList();
 
-
-            return new SearchResult(query, docIds.Count, docresult, ignored, DateTime.Now - start);
-        }
-
-        private List<int> GetWordIds(string[] query, out List<string> outIgnored)
-        {
-            var res = new List<int>();
-            var ignored = new List<string>();
-
-            foreach (var aWord in query)
-            {
-                if (mWords.ContainsKey(aWord))
-                    res.Add(mWords[aWord]);
-                else
-                    ignored.Add(aWord);
-            }
-            outIgnored = ignored;
-            return res;
+            return new SearchResult(query, docIds.Count, docResults, ignored, DateTime.Now - start);
         }
     }
 }
