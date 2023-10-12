@@ -9,7 +9,10 @@ namespace SearchApi.Database
 
         public CaseInsensitivePostgresDatabase()
         {
-            postgresDatabase = new PostgresDatabase();
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(Config.POSTGRES_DATABASE2);
+            var dataSource = dataSourceBuilder.Build();
+
+            postgresDatabase = new PostgresDatabase(dataSource);
         }
 
         public Dictionary<string, List<int>> GetAllWordsCaseInsensitive()

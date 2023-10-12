@@ -15,6 +15,11 @@ namespace SearchApi.Database
             conn = dataSource.OpenConnection();
         }
 
+        public PostgresDatabase(NpgsqlDataSource dataSource)
+        {
+            conn = dataSource.OpenConnection();
+        }
+
         public NpgsqlCommand CreateCommand(string sql)
         {
             return new NpgsqlCommand(sql, conn);

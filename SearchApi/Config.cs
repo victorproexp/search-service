@@ -9,5 +9,8 @@ namespace Shared
 
         //public static string POSTGRES_DATABASE = "Host=postgredb;Username=postgres;Password=example;Database=postgres";
         public static string POSTGRES_DATABASE = "Host=localhost;Username=postgres;Password=example;Database=postgres";
+        
+        //public static string POSTGRES_DATABASE2 = "Host=postgredb;Username=postgres;Password=example;Database=postgres2";
+        public static string POSTGRES_DATABASE2 = "Host=localhost;Username=postgres;Password=example;Database=postgres2";
     }
 }
