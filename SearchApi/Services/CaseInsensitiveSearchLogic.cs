@@ -13,7 +13,7 @@ namespace SearchApi.Services
         public CaseInsensitiveSearchLogic()
         {
             mDatabase = new CaseInsensitivePostgresDatabase();
-            mWords = mDatabase.GetAllWordsCI();
+            mWords = mDatabase.GetAllWordsCaseInsensitive();
         }
 
         /* Perform search of documents containing words from query. The result will

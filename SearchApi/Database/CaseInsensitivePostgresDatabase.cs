@@ -12,11 +12,11 @@ namespace SearchApi.Database
             postgresDatabase = new PostgresDatabase();
         }
 
-        public Dictionary<string, List<int>> GetAllWordsCI()
+        public Dictionary<string, List<int>> GetAllWordsCaseInsensitive()
         {
             var res = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
 
-            // Create a parameterized SQL query with explicit casting to 'text' and ILIKE for case-insensitive comparison
+            // Create a parameterized SQL query with explicit casting to 'text'
             var sql = "SELECT \"id\", \"word\"::text FROM \"word\"";
 
             using (var cmd = postgresDatabase.CreateCommand(sql))
