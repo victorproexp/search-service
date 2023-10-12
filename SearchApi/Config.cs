@@ -7,6 +7,7 @@ namespace Shared
 
         public static string DATABASE = @"/Users/victorpascale/Projects/6semester/searchDB.db";
 
-        public static string POSTGRES_DATABSE = "Host=postgredb;Username=postgres;Password=example;Database=postgres";
+        //public static string POSTGRES_DATABASE = "Host=postgredb;Username=postgres;Password=example;Database=postgres";
+        public static string POSTGRES_DATABASE = "Host=localhost;Username=postgres;Password=example;Database=postgres";
     }
 }

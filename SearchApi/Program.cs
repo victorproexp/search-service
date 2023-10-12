@@ -24,6 +24,10 @@ app.MapGet("/search", (string query, int? maxAmount) => {
     return SearchFactory.CreateSearchLogic().Search(query.Split(","), maxAmount ?? 10);
 });
 
+app.MapGet("/search/ci", (string query, int? maxAmount) => {
+    return SearchFactory.CreateCaseInsensitiveSearchLogic().Search(query.Split(","), maxAmount ?? 10);
+});
+
 app.MapGet("/version", () => {
         var properties = new Dictionary<string, string>
         {

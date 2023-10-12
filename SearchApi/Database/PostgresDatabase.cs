@@ -9,10 +9,15 @@ namespace SearchApi.Database
         private readonly NpgsqlConnection conn;
         public PostgresDatabase()
         {
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(Config.POSTGRES_DATABSE);
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(Config.POSTGRES_DATABASE);
             var dataSource = dataSourceBuilder.Build();
 
             conn = dataSource.OpenConnection();
+        }
+
+        public NpgsqlCommand CreateCommand(string sql)
+        {
+            return new NpgsqlCommand(sql, conn);
         }
 
         public List<KeyValuePair<int, int>> GetDocuments(List<int> wordIds)

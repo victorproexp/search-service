@@ -6,5 +6,10 @@ namespace SearchApi.Services
 		{
 			return new SearchLogic();
 		}
+
+		public static ISearchLogic CreateCaseInsensitiveSearchLogic()
+		{
+			return new CaseInsensitiveSearchLogic();
+		}
 	}
 }
