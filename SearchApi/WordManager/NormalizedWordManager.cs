@@ -1,12 +1,12 @@
-﻿namespace SearchApi.Services
+﻿namespace SearchApi
 {
-    public class CaseInsensitiveWordManager : IWordManager
+    public class NormalizedWordManager : IWordManager
     {
-        private readonly Dictionary<string, List<int>> mWords;
+        private readonly Dictionary<string, List<int>> words;
 
-        public CaseInsensitiveWordManager(Dictionary<string, List<int>> words)
+        public NormalizedWordManager(Dictionary<string, List<int>> words)
         {
-            mWords = words;
+            this.words = words;
         }
 
         public List<int> GetWordIds(string[] query, out List<string> outIgnored)
@@ -16,9 +16,9 @@
 
             foreach (var aWord in query)
             {
-                if (mWords.ContainsKey(aWord))
+                if (words.ContainsKey(aWord))
                 {
-                    res.AddRange(mWords[aWord]);
+                    res.AddRange(words[aWord]);
                 }
                 else
                 {

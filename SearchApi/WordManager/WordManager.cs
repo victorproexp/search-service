@@ -1,12 +1,12 @@
-namespace SearchApi.Services
+namespace SearchApi
 {
     public class WordManager : IWordManager
     {
-        private readonly Dictionary<string, int> mWords;
+        private readonly Dictionary<string, int> words;
 
         public WordManager(Dictionary<string, int> words)
         {
-            mWords = words;
+            this.words = words;
         }
 
         public List<int> GetWordIds(string[] query, out List<string> outIgnored)
@@ -16,9 +16,9 @@ namespace SearchApi.Services
 
             foreach (var aWord in query)
             {
-                if (mWords.ContainsKey(aWord))
+                if (words.ContainsKey(aWord))
                 {
-                    res.Add(mWords[aWord]);
+                    res.Add(words[aWord]);
                 }
                 else
                 {

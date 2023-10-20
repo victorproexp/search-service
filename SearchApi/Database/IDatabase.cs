@@ -1,6 +1,6 @@
 ﻿using SearchApi.Models;
 
-namespace SearchApi.Database
+namespace SearchApi
 {
     public interface IDatabase
     {

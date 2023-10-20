@@ -1,4 +1,4 @@
-﻿namespace SearchApi.Services
+﻿namespace SearchApi
 {
     public interface IWordManager
     {

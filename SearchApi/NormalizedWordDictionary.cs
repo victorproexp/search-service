@@ -1,42 +1,34 @@
-using Shared;
-using Npgsql;
-
-namespace SearchApi.Database
+namespace SearchApi
 {
-    public class CaseInsensitivePostgresDatabase
+    public class NormalizedWordDictionary
     {
-        public readonly PostgresDatabase postgresDatabase; // Composition
+        public readonly Database database;
 
-        public CaseInsensitivePostgresDatabase()
+        public NormalizedWordDictionary()
         {
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(Config.POSTGRES_DATABASE2);
-            var dataSource = dataSourceBuilder.Build();
+            var connectionString = ConnectionStringBuilder.Create("postgres2");
 
-            postgresDatabase = new PostgresDatabase(dataSource);
+            database = new Database(connectionString);
         }
 
-        public Dictionary<string, List<int>> GetAllWordsCaseInsensitive()
+        public Dictionary<string, List<int>> GetAllWords()
         {
             var res = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
 
             // Create a parameterized SQL query with explicit casting to 'text'
             var sql = "SELECT \"id\", \"word\"::text FROM \"word\"";
 
-            using (var cmd = postgresDatabase.CreateCommand(sql))
+            using (var cmd = database.CreateCommand(sql))
             {
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var id = reader.GetInt32(0);
-                    var w = reader.GetString(1);
+                    var word = reader.GetString(1);
 
-                    // Extract word
-                    int pFrom = w.IndexOf(",") + ",".Length;
-                    int pTo = w.LastIndexOf(")");
-                    w = w[pFrom..pTo];
+                    word = Database.ExtractWord(word);
 
-                    // Normalize the word to lowercase
-                    var normalizedWord = w.ToLower();
+                    var normalizedWord = word.ToLower();
 
                     if (res.ContainsKey(normalizedWord))
                     {

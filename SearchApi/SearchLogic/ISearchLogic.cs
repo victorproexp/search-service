@@ -1,6 +1,6 @@
 using SearchApi.Models;
 
-namespace SearchApi.Services
+namespace SearchApi
 {
     public interface ISearchLogic
     {

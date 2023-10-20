@@ -2,6 +2,8 @@ version: '3.7'
 services:
   SearchApi:
       image: search-api:latest
+      environment:
+        POSTGRES_HOST: postgredb
       expose:
       - "80"
   nginx:

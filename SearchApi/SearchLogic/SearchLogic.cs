@@ -1,32 +1,31 @@
-using SearchApi.Database;
 using SearchApi.Models;
 
-namespace SearchApi.Services
+namespace SearchApi
 {
     public class SearchLogic : ISearchLogic
     {
-        private readonly IDatabase mDatabase;
-        private readonly IWordManager mWordManager;
+        private readonly IDatabase database;
+        private readonly IWordManager wordManager;
 
         public SearchLogic(IDatabase database)
         {
-            mDatabase = database;
-            mWordManager = new WordManager(mDatabase.GetAllWords());
+            this.database = database;
+            wordManager = new WordManager(database.GetAllWords());
         }
 
         public SearchResult Search(string[] query, int maxAmount)
         {
             DateTime start = DateTime.Now;
             
-            var wordIds = mWordManager.GetWordIds(query, out List<string> ignored);
+            var wordIds = wordManager.GetWordIds(query, out List<string> ignored);
 
-            var docIds = mDatabase.GetDocuments(wordIds);
+            var docIds = database.GetDocuments(wordIds);
 
             var top = docIds.Take(Math.Min(maxAmount, docIds.Count))
                           .Select(p => p.Key)
                           .ToList();
 
-            var docDetails = mDatabase.GetDocDetails(top);
+            var docDetails = database.GetDocDetails(top);
             var docResults = docDetails.Select((doc, idx) => new DocumentHit(doc, docIds[idx].Value))
                                       .ToList();
 

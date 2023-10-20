@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-using SearchApi.Services;
+using SearchApi;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -24,8 +24,8 @@ app.MapGet("/search", (string query, int? maxAmount) => {
     return SearchFactory.CreateSearchLogic().Search(query.Split(","), maxAmount ?? 10);
 });
 
-app.MapGet("/search/ci", (string query, int? maxAmount) => {
-    return SearchFactory.CreateCaseInsensitiveSearchLogic().Search(query.Split(","), maxAmount ?? 10);
+app.MapGet("/nsearch", (string query, int? maxAmount) => {
+    return SearchFactory.CreateNormalizedSearchLogic().Search(query.Split(","), maxAmount ?? 10);
 });
 
 app.MapGet("/version", () => {

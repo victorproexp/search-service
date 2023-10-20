@@ -1,63 +1,48 @@
-using Shared;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using SearchApi.Models;
 
-namespace SearchApi.Database
+namespace SearchApi
 {
     public class Database : IDatabase
     {
-        private SqliteConnection _connection;
+        private readonly NpgsqlConnection connection;
         public Database()
         {
-            var connectionStringBuilder = new SqliteConnectionStringBuilder
-            {
-                DataSource = Config.DATABASE
-            };
+            var connectionString = ConnectionStringBuilder.Create("postgres");
 
-            _connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-
-            _connection.Open();          
+            connection = new NpgsqlConnection(connectionString);
+            connection.Open();
         }
 
-        private void Execute(string sql)
+        public Database(string connectionString)
         {
-            var cmd = _connection.CreateCommand();
-            cmd.CommandText = sql;
-            cmd.ExecuteNonQuery();
+            connection = new NpgsqlConnection(connectionString);
+            connection.Open();
         }
 
-        /** Will perform a search based on a list of word id's. The result
-         * is a list of KeyValuePair, where the key part is the id of the 
-         * documents and the value part is the number of words in the document
-        */
+        public NpgsqlCommand CreateCommand(string sql)
+        {
+            return new NpgsqlCommand(sql, connection);
+        }
+
         public List<KeyValuePair<int, int>> GetDocuments(List<int> wordIds)
         {
             var res = new List<KeyValuePair<int, int>>();
 
-             /* Here is an example where we search for documents
-              * containing words with id 2 or id 3.
-              * SELECT docId, COUNT(wordId) as count
- FROM Occ
- where wordId in (2,3)
- GROUP BY docId
- ORDER BY COUNT(wordId) DESC
-              * 
-              */
+            // Create a parameterized SQL query
+            var sql = "SELECT \"docId\", COUNT(\"wordId\") as count FROM \"occ\" WHERE \"wordId\" = ANY(@wordIds) GROUP BY \"docId\" ORDER BY COUNT(\"wordId\") DESC;";
 
-             var sql = "SELECT docId, COUNT(wordId) as count FROM Occ where ";
-            sql += "wordId in " + AsString(wordIds) + " GROUP BY docId ";
-            sql += "ORDER BY count DESC;";
-
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = sql;
-
-            using (var reader = selectCmd.ExecuteReader())
+            using (var cmd = new NpgsqlCommand(sql, connection))
             {
+                // Add a parameter for the wordIds list
+                cmd.Parameters.AddWithValue("wordIds", wordIds.ToArray());
+
+                using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var docId = reader.GetInt32(0);
                     var count = reader.GetInt32(1);
-                   
+
                     res.Add(new KeyValuePair<int, int>(docId, count));
                 }
             }
@@ -65,48 +50,24 @@ namespace SearchApi.Database
             return res;
         }
 
-        /**
-         * will return x as a ',' separated string. For instance
-         * will AsString([1,2,3]) return "(1,2,3)".
-         */
-        private string AsString(List<int> x)
-        {
-            string res = "(";
-
-            for (int i = 0; i < x.Count - 1; i++)
-                res += x[i] + ",";
-
-            if (x.Count > 0)
-                res += x[x.Count - 1];
-
-            res += ")";
-
-            return res;
-        }
-        /*
-         * SELECT wordId, COUNT(docId) as count
-FROM Occ
-where wordId in (2,3)
-GROUP BY wordId
-ORDER BY COUNT(docId) DESC;
-        */
-
-
         public Dictionary<string, int> GetAllWords()
         {
-            Dictionary<string, int> res = new Dictionary<string, int>();
-      
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "SELECT * FROM word";
+            var res = new Dictionary<string, int>();
 
-            using (var reader = selectCmd.ExecuteReader())
+            // Create a parameterized SQL query with explicit casting to 'text'
+            var sql = "SELECT \"id\", \"word\"::text FROM \"word\"";
+
+            using (var cmd = new NpgsqlCommand(sql, connection))
             {
+                using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var id = reader.GetInt32(0);
-                    var w = reader.GetString(1);
-                    
-                    res.Add(w, id);
+                    var word = reader.GetString(1);
+
+                    word = ExtractWord(word);
+
+                    res.Add(word, id);
                 }
             }
             return res;
@@ -114,13 +75,16 @@ ORDER BY COUNT(docId) DESC;
 
         public List<BEDocument> GetDocDetails(List<int> docIds)
         {
-            List<BEDocument> res = new List<BEDocument>();
+            var res = new List<BEDocument>();
 
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "SELECT * FROM document where id in " + AsString(docIds);
+            // Create a parameterized SQL query
+            var sql = "SELECT \"id\", \"url\", \"idxTime\", \"creationTime\" FROM \"document\" WHERE \"id\" = ANY(@docIds);";
 
-            using (var reader = selectCmd.ExecuteReader())
+            using (var cmd = new NpgsqlCommand(sql, connection))
             {
+                cmd.Parameters.AddWithValue("docIds", docIds.ToArray());
+
+                using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var id = reader.GetInt32(0);
@@ -132,6 +96,13 @@ ORDER BY COUNT(docId) DESC;
                 }
             }
             return res;
+        }
+
+        public static string ExtractWord(string fullText)
+        {
+            int pFrom = fullText.IndexOf(",") + ",".Length;
+            int pTo = fullText.LastIndexOf(")");
+            return fullText[pFrom..pTo];
         }
     }
 }
