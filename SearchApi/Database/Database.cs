@@ -6,10 +6,11 @@ namespace SearchApi
     public class Database : IDatabase
     {
         private readonly NpgsqlConnection connection;
+        private readonly string sqlGetAllWords = "SELECT \"id\", \"word\"::text FROM \"word\"";
         
         public Database()
         {
-            var connectionString = ConnectionStringBuilder.Create("postgres");
+            var connectionString = ConnectionStringBuilder.Create();
 
             connection = new NpgsqlConnection(connectionString);
             connection.Open();
@@ -51,22 +52,46 @@ namespace SearchApi
             return res;
         }
 
-        public Dictionary<string, int> GetAllWords()
+        public Dictionary<string, List<int>> GetAllWordsNormalized()
         {
-            var res = new Dictionary<string, int>();
+            var res = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
 
-            // Create a parameterized SQL query with explicit casting to 'text'
-            var sql = "SELECT \"id\", \"word\"::text FROM \"word\"";
-
-            using (var cmd = new NpgsqlCommand(sql, connection))
+            using (var cmd = new NpgsqlCommand(sqlGetAllWords, connection))
             {
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var id = reader.GetInt32(0);
-                    var word = reader.GetString(1);
+                    var word = ExtractWord(reader.GetString(1));
 
-                    word = ExtractWord(word);
+                    var normalizedWord = word.ToLower();
+
+                    if (res.ContainsKey(normalizedWord))
+                    {
+                        // Handle duplicate words by adding the ID to the existing list
+                        res[normalizedWord].Add(id);
+                    }
+                    else
+                    {
+                        // Add the word with a new list containing the ID
+                        res.Add(normalizedWord, new List<int> { id });
+                    }
+                }
+            }
+            return res;
+        }
+
+        public Dictionary<string, int> GetAllWords()
+        {
+            var res = new Dictionary<string, int>();
+
+            using (var cmd = new NpgsqlCommand(sqlGetAllWords, connection))
+            {
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var id = reader.GetInt32(0);
+                    var word = ExtractWord(reader.GetString(1));
 
                     res.Add(word, id);
                 }
@@ -99,7 +124,7 @@ namespace SearchApi
             return res;
         }
 
-        public static string ExtractWord(string fullText)
+        private static string ExtractWord(string fullText)
         {
             int pFrom = fullText.IndexOf(",") + ",".Length;
             int pTo = fullText.LastIndexOf(")");

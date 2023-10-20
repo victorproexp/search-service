@@ -7,9 +7,9 @@ namespace SearchApi
         private readonly IDatabase database;
         private readonly IWordManager wordManager;
 
-        public SearchLogic(IWordManager wordManager)
+        public SearchLogic(IDatabase database, IWordManager wordManager)
         {
-            database = new Database();
+            this.database = database;
             this.wordManager = wordManager;
         }
 
