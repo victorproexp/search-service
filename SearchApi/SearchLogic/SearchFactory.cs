@@ -4,12 +4,22 @@ namespace SearchApi
 	{
 		public static ISearchLogic CreateSearchLogic()
 		{
-			return new SearchLogic(new Database());
+			IDatabase database = new Database();
+			IWordManager wordManager = new WordManager<int>(database.GetAllWords());
+
+			ISearchLogic searchLogic = new SearchLogic(wordManager);
+
+			return searchLogic;
 		}
 
 		public static ISearchLogic CreateNormalizedSearchLogic()
 		{
-			return new NormalizedSearchLogic(new NormalizedWordDictionary());
+			NormalizedWordDictionary dictionary = new();
+			IWordManager wordManager = new WordManager<List<int>>(dictionary.GetAllWords());
+
+			ISearchLogic searchLogic = new SearchLogic(wordManager);
+
+			return searchLogic;
 		}
 	}
 }

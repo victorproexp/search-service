@@ -2,7 +2,7 @@ namespace SearchApi
 {
     public class NormalizedWordDictionary
     {
-        public readonly Database database;
+        private readonly Database database;
 
         public NormalizedWordDictionary()
         {

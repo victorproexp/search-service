@@ -1,10 +1,10 @@
 namespace SearchApi
 {
-    public class WordManager : IWordManager
+    public class WordManager<T> : IWordManager
     {
-        private readonly Dictionary<string, int> words;
+        private readonly Dictionary<string, T> words;
 
-        public WordManager(Dictionary<string, int> words)
+        public WordManager(Dictionary<string, T> words)
         {
             this.words = words;
         }
@@ -18,7 +18,17 @@ namespace SearchApi
             {
                 if (words.ContainsKey(aWord))
                 {
-                    res.Add(words[aWord]);
+                    if (typeof(T) == typeof(int))
+                    {
+                        res.Add(Convert.ToInt32(words[aWord]));
+                    }
+                    else if (typeof(T) == typeof(List<int>))
+                    {
+                        if (words[aWord] is List<int> list)
+                        {
+                            res.AddRange(list);
+                        }
+                    }
                 }
                 else
                 {

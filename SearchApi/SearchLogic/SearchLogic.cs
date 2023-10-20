@@ -7,14 +7,19 @@ namespace SearchApi
         private readonly IDatabase database;
         private readonly IWordManager wordManager;
 
-        public SearchLogic(IDatabase database)
+        public SearchLogic(IWordManager wordManager)
         {
-            this.database = database;
-            wordManager = new WordManager(database.GetAllWords());
+            database = new Database();
+            this.wordManager = wordManager;
         }
 
         public SearchResult Search(string[] query, int maxAmount)
         {
+            if (wordManager is WordManager<List<int>>)
+            {
+                query = query.Select(q => q.ToLower()).ToArray();
+            }
+
             DateTime start = DateTime.Now;
             
             var wordIds = wordManager.GetWordIds(query, out List<string> ignored);

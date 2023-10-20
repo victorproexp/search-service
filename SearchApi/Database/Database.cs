@@ -6,6 +6,7 @@ namespace SearchApi
     public class Database : IDatabase
     {
         private readonly NpgsqlConnection connection;
+        
         public Database()
         {
             var connectionString = ConnectionStringBuilder.Create("postgres");
