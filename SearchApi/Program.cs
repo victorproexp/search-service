@@ -11,7 +11,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy  =>
                       {
-                          policy.WithOrigins("http://localhost:4000");
+                          policy.WithOrigins("http://localhost:5271");
                       });
 });
 
@@ -20,12 +20,17 @@ var app = builder.Build();
 
 app.UseCors(MyAllowSpecificOrigins);
 
+IDatabase database = new Database();
+
+ISearchLogic searchLogic = SearchFactory.CreateSearchLogic(database);
+ISearchLogic normalizedSearchLogic = SearchFactory.CreateNormalizedSearchLogic(database);
+
 app.MapGet("/search", (string query, int? maxAmount) => {
-    return SearchFactory.CreateSearchLogic().Search(query.Split(","), maxAmount ?? 10);
+    return searchLogic.Search(query.Split(","), maxAmount ?? 10);
 });
 
 app.MapGet("/nsearch", (string query, int? maxAmount) => {
-    return SearchFactory.CreateNormalizedSearchLogic().Search(query.Split(","), maxAmount ?? 10);
+    return normalizedSearchLogic.Search(query.Split(","), maxAmount ?? 10);
 });
 
 app.MapGet("/version", () => {

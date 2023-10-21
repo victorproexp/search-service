@@ -3,8 +3,12 @@
 
 <div class="search-box">
     <h1>Mail Search</h1>
+    <label>
+        Case sensitive
+        <input type="checkbox" @bind="caseSensitive" />
+    </label>
     <div class="search-bar">
-        <input placeholder="Search for Mails" @bind="query" />
+        <input placeholder="Search for Mails" @bind="input" />
         <button @onclick="Search">Search</button>
     </div>
     <div class="search-result">
@@ -31,23 +35,29 @@
                 {
                     <p>Ignored: [@string.Join(", ", searchResult.Ignored)]</p>
                 }
-                <p>Time used: @(searchResult.TimeUsed.TotalMilliseconds)ms</p>
+                <p>Time used: @(Math.Round(searchResult.TimeUsed.TotalMilliseconds))ms</p>
             }
         }
     </div>
 </div>
 
 @code {
-    string query = string.Empty;
+    string input = string.Empty;
+
+    bool caseSensitive = false;
 
     SearchResult? searchResult = null;
 
     private async Task Search()
     {
-        query = query.Replace(" ", ",");
+        input = input.Replace(" ", ",");
+
+        string query = caseSensitive ? "/search?query=" : "/nsearch?query=";
+
+        query += input;
 
         searchResult = await SearchService.GetSearchResultAsync(query);
 
-        query = string.Empty;
+        input = string.Empty;
     }
 }
