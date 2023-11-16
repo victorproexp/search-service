@@ -4,7 +4,7 @@ namespace WebSearch
     {
         static readonly HttpClient client = new();
         
-        static readonly string HOST_URL = "http://localhost:5033";
+        static readonly string HOST_URL = "http://localhost:4000";
 
         public async Task<SearchResult> GetSearchResultAsync(string query)
         {

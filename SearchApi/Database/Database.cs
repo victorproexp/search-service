@@ -22,11 +22,6 @@ namespace SearchApi
             connection.Open();
         }
 
-        public NpgsqlCommand CreateCommand(string sql)
-        {
-            return new NpgsqlCommand(sql, connection);
-        }
-
         public List<KeyValuePair<int, int>> GetDocuments(List<int> wordIds)
         {
             var res = new List<KeyValuePair<int, int>>();
@@ -34,7 +29,7 @@ namespace SearchApi
             // Create a parameterized SQL query
             var sql = "SELECT \"docId\", COUNT(\"wordId\") as count FROM \"occ\" WHERE \"wordId\" = ANY(@wordIds) GROUP BY \"docId\" ORDER BY COUNT(\"wordId\") DESC;";
 
-            using (var cmd = new NpgsqlCommand(sql, connection))
+            using (var cmd = CreateCommand(sql))
             {
                 // Add a parameter for the wordIds list
                 cmd.Parameters.AddWithValue("wordIds", wordIds.ToArray());
@@ -56,7 +51,7 @@ namespace SearchApi
         {
             var res = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
 
-            using (var cmd = new NpgsqlCommand(sqlGetAllWords, connection))
+            using (var cmd = CreateCommand(sqlGetAllWords))
             {
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -85,7 +80,7 @@ namespace SearchApi
         {
             var res = new Dictionary<string, int>();
 
-            using (var cmd = new NpgsqlCommand(sqlGetAllWords, connection))
+            using (var cmd = CreateCommand(sqlGetAllWords))
             {
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -106,7 +101,7 @@ namespace SearchApi
             // Create a parameterized SQL query
             var sql = "SELECT \"id\", \"url\", \"idxTime\", \"creationTime\" FROM \"document\" WHERE \"id\" = ANY(@docIds);";
 
-            using (var cmd = new NpgsqlCommand(sql, connection))
+            using (var cmd = CreateCommand(sql))
             {
                 cmd.Parameters.AddWithValue("docIds", docIds.ToArray());
 
@@ -129,6 +124,11 @@ namespace SearchApi
             int pFrom = fullText.IndexOf(",") + ",".Length;
             int pTo = fullText.LastIndexOf(")");
             return fullText[pFrom..pTo];
+        }
+
+        private NpgsqlCommand CreateCommand(string sql)
+        {
+            return new NpgsqlCommand(sql, connection);
         }
     }
 }

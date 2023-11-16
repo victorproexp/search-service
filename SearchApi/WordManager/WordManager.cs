@@ -9,35 +9,42 @@ namespace SearchApi
             this.words = words;
         }
 
-        public List<int> GetWordIds(string[] query, out List<string> outIgnored)
+        public List<int> GetWordIds(string[] query, out List<string> outignoredWords)
         {
-            var res = new List<int>();
-            var ignored = new List<string>();
+            var result = new List<int>();
+            var ignoredWords = new List<string>();
 
-            foreach (var aWord in query)
+            if (typeof(T) == typeof(int))
             {
-                if (words.ContainsKey(aWord))
+                foreach (var word in query)
                 {
-                    if (typeof(T) == typeof(int))
+                    if (words.ContainsKey(word))
                     {
-                        res.Add(Convert.ToInt32(words[aWord]));
+                        result.Add(Convert.ToInt32(words[word]));
                     }
-                    else if (typeof(T) == typeof(List<int>))
+                    else
                     {
-                        if (words[aWord] is List<int> list)
-                        {
-                            res.AddRange(list);
-                        }
+                        ignoredWords.Add(word);
                     }
                 }
-                else
+            }
+            else if (typeof(T) == typeof(List<int>))
+            {
+                foreach (var word in query)
                 {
-                    ignored.Add(aWord);
+                    if (words.ContainsKey(word) && words[word] is List<int> list)
+                    {
+                        result.AddRange(list);
+                    }
+                    else
+                    {
+                        ignoredWords.Add(word);
+                    }
                 }
             }
 
-            outIgnored = ignored;
-            return res;
+            outignoredWords = ignoredWords;
+            return result;
         }
     }
 }
