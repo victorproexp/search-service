@@ -8,16 +8,10 @@ namespace SearchApi
         private readonly NpgsqlConnection connection;
         private readonly string sqlGetAllWords = "SELECT \"id\", \"word\"::text FROM \"word\"";
         
-        public Database()
+        public Database(string databaseName)
         {
-            var connectionString = ConnectionStringBuilder.Create();
+            var connectionString = ConnectionStringBuilder.Create(databaseName);
 
-            connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-        }
-
-        public Database(string connectionString)
-        {
             connection = new NpgsqlConnection(connectionString);
             connection.Open();
         }

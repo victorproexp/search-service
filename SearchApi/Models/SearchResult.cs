@@ -10,13 +10,13 @@ namespace SearchApi.Models
      */
     public class SearchResult
     {
-        public SearchResult(String[] query, int hits, List<DocumentHit> documents, List<string> ignored, TimeSpan timeUsed)
+        public SearchResult(String[] query, int hits, List<DocumentHit> documents, List<string> ignored)
         {
             Query = query;
             Hits = hits;
             DocumentHits = documents;
             Ignored = ignored;
-            TimeUsed = timeUsed;
+            TimeUsed = default;
         }
 
         public String[] Query { get;  set; }

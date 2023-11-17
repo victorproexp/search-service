@@ -13,10 +13,8 @@ namespace SearchApi
             this.wordManager = wordManager;
         }
 
-        public SearchResult Search(string[] query, int maxAmount)
+        public SearchResult CreateSearchResult(string[] query, int maxAmount)
         {
-            DateTime start = DateTime.Now;
-
             query = NormalizeQueryIfNecessary(query);
             
             var wordIds = wordManager.GetWordIds(query, out List<string> ignored);
@@ -31,7 +29,7 @@ namespace SearchApi
             var docResults = docDetails.Select((doc, index) => new DocumentHit(doc, docIds[index].Value))
                                       .ToList();
 
-            return new SearchResult(query, docIds.Count, docResults, ignored, DateTime.Now - start);
+            return new SearchResult(query, docIds.Count, docResults, ignored);
         }
 
         private string[] NormalizeQueryIfNecessary(string[] query)

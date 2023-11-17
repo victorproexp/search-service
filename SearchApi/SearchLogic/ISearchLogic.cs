@@ -4,6 +4,6 @@ namespace SearchApi
 {
     public interface ISearchLogic
     {
-        SearchResult Search(string[] query, int maxAmount);
+        SearchResult CreateSearchResult(string[] query, int maxAmount);
     }
 }
