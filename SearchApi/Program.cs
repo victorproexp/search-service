@@ -12,22 +12,17 @@ builder.Services.AddCors(options =>
                           policy.WithOrigins("http://localhost:5271");
                       });
 });
+builder.Services.AddControllers();
+builder.Services.AddSingleton<ISearchAggregator, SearchAggregator>();
 
 var app = builder.Build();
-//app.UseHttpsRedirection();
 
 app.UseCors(MyAllowSpecificOrigins);
 
-var searchAggregator = new SearchAggregator();
-
-app.MapGet("/search", (string query, int? maxAmount) => 
-    searchAggregator.GetSearchResult(query, maxAmount)
-);
-
-app.MapGet("/nsearch", (string query, int? maxAmount) => 
-    searchAggregator.GetNormalizedSearchResult(query, maxAmount)
-);
-
 app.MapGet("/version", () => Utils.GetApiVersion());
+
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
