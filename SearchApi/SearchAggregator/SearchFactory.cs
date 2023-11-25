@@ -2,18 +2,48 @@ namespace SearchApi
 {
 	public class SearchFactory
 	{
-		public static ISearchLogic CreateSearchLogic(IDatabase database)
+		public static List<ISearchLogic> CreateSearchLogics(IDatabase database)
 		{
-			IWordManager wordManager = new WordManager<int>(database.GetAllWords());
-			ISearchLogic searchLogic = new SearchLogic(database, wordManager);
-			return searchLogic;
+			var searchLogics = new List<ISearchLogic>();
+
+			var dictionary = database.GetAllWords();
+            var normalizedDictionary = NormalizeDictionary(dictionary);
+
+			var wordManager = new WordManager<int>(dictionary);
+            var normalizedWordManager = new WordManager<List<int>>(normalizedDictionary);
+
+			var searchLogic = CreateSearchLogic(database, wordManager);
+			var normalizedSearchLogic = CreateSearchLogic(database, normalizedWordManager);
+
+			searchLogics.AddRange(new[] { searchLogic, normalizedSearchLogic });
+
+			return searchLogics;
 		}
 
-		public static ISearchLogic CreateNormalizedSearchLogic(IDatabase database)
+		private static ISearchLogic CreateSearchLogic(IDatabase database, IWordManager wordManager)
 		{
-			IWordManager wordManager = new WordManager<List<int>>(database.GetAllWordsNormalized());
-			ISearchLogic searchLogic = new SearchLogic(database, wordManager);
-			return searchLogic;
+			return new SearchLogic(database, wordManager);
+		}
+
+		private static Dictionary<string, List<int>> NormalizeDictionary(Dictionary<string, int> originalDict)
+		{
+			var newDict = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (var kvp in originalDict)
+			{
+				string lowerKey = kvp.Key.ToLower();
+
+				if (newDict.ContainsKey(lowerKey))
+				{
+					newDict[lowerKey].Add(kvp.Value);
+				}
+				else
+				{
+					newDict.Add(lowerKey, new List<int> { kvp.Value });
+				}
+			}
+
+			return newDict;
 		}
 	}
 }

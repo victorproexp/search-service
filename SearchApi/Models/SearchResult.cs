@@ -19,13 +19,13 @@ namespace SearchApi.Models
             TimeUsed = default;
         }
 
-        public String[] Query { get;  set; }
+        public String[] Query { get; private set; }
 
-        public int Hits { get; set; }
+        public int Hits { get; private set; }
 
-        public List<DocumentHit> DocumentHits { get;  set; }
+        public List<DocumentHit> DocumentHits { get; private  set; }
 
-        public List<string> Ignored { get; set; }
+        public List<string> Ignored { get; private set; }
 
         public TimeSpan TimeUsed { get;  set; }
     }

@@ -4,6 +4,7 @@ namespace SearchApi
 {
     public interface ISearchLogic
     {
-        SearchResult CreateSearchResult(string[] query, int maxAmount);
+        SearchResult Search(string[] query, int maxAmount);
+        bool IsNormalized { get; }
     }
 }

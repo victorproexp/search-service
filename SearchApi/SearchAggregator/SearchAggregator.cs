@@ -6,7 +6,6 @@ namespace SearchApi
     {
         const int DefaultMaxAmount = 10;
         readonly List<ISearchLogic> searchLogics = new();
-        readonly List<ISearchLogic> normalizedSearchLogics = new();
 
         public SearchAggregator()
         {
@@ -14,14 +13,14 @@ namespace SearchApi
         }
 
         public async Task<SearchResult> GetSearchResult(string query, int? maxAmount) =>
-            await AggregateSearchResults(searchLogics, query, maxAmount);
+            await AggregateSearchResults(GetNonNormalizedLogics(), query, maxAmount);
 
-        public async Task<SearchResult> GetNormalizedSearchResult(string query, int? maxAmount) => 
-            await AggregateSearchResults(normalizedSearchLogics, query, maxAmount);
+        public async Task<SearchResult> GetNormalizedSearchResult(string query, int? maxAmount) =>
+            await AggregateSearchResults(GetNormalizedLogics(), query, maxAmount);
 
-        private static async Task<SearchResult> AggregateSearchResults(List<ISearchLogic> searchLogics, string query, int? maxAmount)
+        private static async Task<SearchResult> AggregateSearchResults(IEnumerable<ISearchLogic> searchLogics, string query, int? maxAmount)
         {
-            DateTime start = DateTime.Now;
+            var startTime = DateTime.Now;
             
             var searchTasks = CreateSearchTasks(searchLogics, query, maxAmount);
 
@@ -29,22 +28,32 @@ namespace SearchApi
 
             var searchResult = MergeSearchResults(searchResults);
 
-            searchResult.TimeUsed = DateTime.Now - start;
+            searchResult.TimeUsed = DateTime.Now - startTime;
 
             return searchResult;
         }
 
-        private static List<Task<SearchResult>> CreateSearchTasks(List<ISearchLogic> searchLogics, string query, int? maxAmount)
+        private static List<Task<SearchResult>> CreateSearchTasks(IEnumerable<ISearchLogic> searchLogics, string query, int? maxAmount)
         {
             var tasks = new List<Task<SearchResult>>();
             foreach (var searchLogic in searchLogics)
             {
-                tasks.Add(Task.Run(() => searchLogic.CreateSearchResult(
-                    query.Split(','), 
-                    maxAmount ?? DefaultMaxAmount
-                )));
+                tasks.Add(Task.Run(() => ExecuteSearch(searchLogic, query, maxAmount)));
             }
             return tasks;
+        }
+
+        private static SearchResult ExecuteSearch(ISearchLogic searchLogic, string query, int? maxAmount)
+        {
+            try
+            {
+                return searchLogic.Search(query.Split(','), maxAmount ?? DefaultMaxAmount);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Search failed with query: {query}");
+                throw;
+            }
         }
 
         private static SearchResult MergeSearchResults(SearchResult[] searchResults)
@@ -62,16 +71,26 @@ namespace SearchApi
 
         private void InitializeSearchLogics()
         {
-            List<IDatabase> databases = new() {
+            var databases = new List<IDatabase>
+            {
                 new Database("postgres"),
                 new Database("postgresadd")
             };
 
             foreach (var database in databases)
             {
-                searchLogics.Add(SearchFactory.CreateSearchLogic(database));
-                normalizedSearchLogics.Add(SearchFactory.CreateNormalizedSearchLogic(database));
+                searchLogics.AddRange(SearchFactory.CreateSearchLogics(database));
             }
+        }
+
+        private IEnumerable<ISearchLogic> GetNonNormalizedLogics()
+        {
+            return searchLogics.Where(logic => !logic.IsNormalized);
+        }
+
+        private IEnumerable<ISearchLogic> GetNormalizedLogics()
+        {
+            return searchLogics.Where(logic => logic.IsNormalized);
         }
     }
 }

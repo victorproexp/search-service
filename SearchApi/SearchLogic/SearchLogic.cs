@@ -6,14 +6,16 @@ namespace SearchApi
     {
         private readonly IDatabase database;
         private readonly IWordManager wordManager;
+        public bool IsNormalized { get; private set; }
 
         public SearchLogic(IDatabase database, IWordManager wordManager)
         {
             this.database = database;
             this.wordManager = wordManager;
+            IsNormalized = wordManager is WordManager<List<int>>;
         }
 
-        public SearchResult CreateSearchResult(string[] query, int maxAmount)
+        public SearchResult Search(string[] query, int maxAmount)
         {
             query = NormalizeQueryIfNecessary(query);
             
@@ -34,7 +36,7 @@ namespace SearchApi
 
         private string[] NormalizeQueryIfNecessary(string[] query)
         {
-            if (wordManager is WordManager<List<int>>)
+            if (IsNormalized)
             {
                 return query.Select(q => q.ToLower()).ToArray();
             }

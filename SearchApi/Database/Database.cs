@@ -41,35 +41,6 @@ namespace SearchApi
             return res;
         }
 
-        public Dictionary<string, List<int>> GetAllWordsNormalized()
-        {
-            var res = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
-
-            using (var cmd = CreateCommand(sqlGetAllWords))
-            {
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    var id = reader.GetInt32(0);
-                    var word = ExtractWord(reader.GetString(1));
-
-                    var normalizedWord = word.ToLower();
-
-                    if (res.ContainsKey(normalizedWord))
-                    {
-                        // Handle duplicate words by adding the ID to the existing list
-                        res[normalizedWord].Add(id);
-                    }
-                    else
-                    {
-                        // Add the word with a new list containing the ID
-                        res.Add(normalizedWord, new List<int> { id });
-                    }
-                }
-            }
-            return res;
-        }
-
         public Dictionary<string, int> GetAllWords()
         {
             var res = new Dictionary<string, int>();
