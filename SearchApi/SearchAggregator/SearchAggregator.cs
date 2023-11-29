@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using SearchApi.Models;
 
 namespace SearchApi
@@ -6,10 +5,12 @@ namespace SearchApi
     public class SearchAggregator : ISearchAggregator
     {
         private readonly List<ISearchLogic> searchLogics = new();
-        private readonly SearchCache searchCache = new();
+        private readonly ISearchCache searchCache;
         
-        public SearchAggregator()
+        public SearchAggregator(ISearchCache searchCache)
         {
+            this.searchCache = searchCache;
+
             var databases = new List<IDatabase>
             {
                 new Database("postgres"),
@@ -27,27 +28,23 @@ namespace SearchApi
 
         private async Task<SearchResult> AggregateSearchResults(IEnumerable<ISearchLogic> searchLogics, SearchParameters parameters)
         {
-            var cacheKey = SearchCache.CreateCacheKey(parameters);
+            var cacheKey = Utils.CreateCacheKey(parameters);
             var cachedResult = searchCache.GetCachedResult(cacheKey);
             if (cachedResult != null)
             {
                 return cachedResult;
             }
-
+            
             var searchResult = await SearchExecutor.SearchAsync(searchLogics, parameters);
             searchCache.CacheResult(cacheKey, searchResult);
 
             return searchResult;
         }
 
-        private IEnumerable<ISearchLogic> GetNonNormalizedLogics()
-        {
-            return searchLogics.Where(logic => !logic.IsNormalized);
-        }
+        private IEnumerable<ISearchLogic> GetNonNormalizedLogics() =>
+            searchLogics.Where(logic => !logic.IsNormalized);
 
-        private IEnumerable<ISearchLogic> GetNormalizedLogics()
-        {
-            return searchLogics.Where(logic => logic.IsNormalized);
-        }
+        private IEnumerable<ISearchLogic> GetNormalizedLogics() =>
+            searchLogics.Where(logic => logic.IsNormalized);
     }
 }

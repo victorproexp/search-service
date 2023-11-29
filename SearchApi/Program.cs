@@ -13,6 +13,7 @@ builder.Services.AddCors(options =>
                       });
 });
 builder.Services.AddControllers();
+builder.Services.AddSingleton<ISearchCache, SearchCache>();
 builder.Services.AddSingleton<ISearchAggregator, SearchAggregator>();
 
 var app = builder.Build();

@@ -1,9 +1,21 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace SearchApi
 {
     public class Utils
     {
+        public static string CreateCacheKey(SearchParameters parameters)
+        {
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append(parameters.IsNormalized ? "N_" : "NN_");
+            stringBuilder.Append(parameters.Query);
+            stringBuilder.Append(':');
+            stringBuilder.Append(parameters.MaxAmount);
+
+            return stringBuilder.ToString();
+        }
+        
         static public Dictionary<string, string> GetApiVersion()
         {
             var properties = new Dictionary<string, string>
