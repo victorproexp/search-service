@@ -1,87 +1,22 @@
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using SearchApi.Models;
 
 namespace SearchApi
 {
     public class SearchAggregator : ISearchAggregator
     {
-        const int DefaultMaxAmount = 10;
-        readonly List<ISearchLogic> searchLogics = new();
-        private readonly MemoryCache cache;
-
+        private readonly List<ISearchLogic> searchLogics = new();
+        private readonly SearchCache searchCache = new();
+        
         public SearchAggregator()
         {
             InitializeSearchLogics();
-
-            cache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         }
 
         public async Task<SearchResult> GetSearchResult(string query, int? maxAmount) =>
-            await AggregateSearchResults(GetNonNormalizedLogics(), query, maxAmount);
+            await AggregateSearchResults(GetNonNormalizedLogics(), new SearchParameters(query, maxAmount));
 
         public async Task<SearchResult> GetNormalizedSearchResult(string query, int? maxAmount) =>
-            await AggregateSearchResults(GetNormalizedLogics(), query, maxAmount);
-
-        private async Task<SearchResult> AggregateSearchResults(IEnumerable<ISearchLogic> searchLogics, string query, int? maxAmount)
-        {
-            var cacheKey = CreateCacheKey(query, maxAmount);
-            if (cache.TryGetValue(cacheKey, out SearchResult? cachedResult))
-            {
-                return cachedResult!;
-            }
-
-            var startTime = DateTime.Now;
-            var searchTasks = CreateSearchTasks(searchLogics, query, maxAmount);
-            var searchResults = await Task.WhenAll(searchTasks);
-            var searchResult = MergeSearchResults(searchResults);
-            searchResult.TimeUsed = DateTime.Now - startTime;
-
-            cache.Set(cacheKey, searchResult, TimeSpan.FromMinutes(5));
-
-            return searchResult;
-        }
-
-        private static string CreateCacheKey(string query, int? maxAmount)
-        {
-            return $"{query}:{maxAmount}";
-        }
-
-        private static List<Task<SearchResult>> CreateSearchTasks(IEnumerable<ISearchLogic> searchLogics, string query, int? maxAmount)
-        {
-            var tasks = new List<Task<SearchResult>>();
-            foreach (var searchLogic in searchLogics)
-            {
-                tasks.Add(Task.Run(() => ExecuteSearch(searchLogic, query, maxAmount)));
-            }
-            return tasks;
-        }
-
-        private static SearchResult ExecuteSearch(ISearchLogic searchLogic, string query, int? maxAmount)
-        {
-            try
-            {
-                return searchLogic.Search(query.Split(','), maxAmount ?? DefaultMaxAmount);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine($"Search failed with query: {query}");
-                throw;
-            }
-        }
-
-        private static SearchResult MergeSearchResults(SearchResult[] searchResults)
-        {
-            var mergedQuery = searchResults.SelectMany(sr => sr.Query).Distinct().ToArray();
-
-            var totalHits = searchResults.Sum(sr => sr.Hits);
-
-            var mergedDocumentHits = searchResults.SelectMany(sr => sr.DocumentHits).ToList();
-
-            var mergedIgnored = searchResults.SelectMany(sr => sr.Ignored).Distinct().ToList();
-
-            return new SearchResult(mergedQuery, totalHits, mergedDocumentHits, mergedIgnored);
-        }
+            await AggregateSearchResults(GetNormalizedLogics(), new SearchParameters(query, maxAmount));
 
         private void InitializeSearchLogics()
         {
@@ -95,6 +30,21 @@ namespace SearchApi
             {
                 searchLogics.AddRange(SearchFactory.CreateSearchLogics(database));
             }
+        }
+
+        private async Task<SearchResult> AggregateSearchResults(IEnumerable<ISearchLogic> searchLogics, SearchParameters parameters)
+        {
+            var cacheKey = SearchCache.CreateCacheKey(parameters);
+            var cachedResult = searchCache.GetCachedResult(cacheKey);
+            if (cachedResult != null)
+            {
+                return cachedResult;
+            }
+
+            var searchResult = await SearchExecutor.SearchAsync(searchLogics, parameters);
+            searchCache.CacheResult(cacheKey, searchResult);
+
+            return searchResult;
         }
 
         private IEnumerable<ISearchLogic> GetNonNormalizedLogics()
