@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using SearchApi.Models;
 
 namespace SearchApi
@@ -9,28 +10,20 @@ namespace SearchApi
         
         public SearchAggregator()
         {
-            InitializeSearchLogics();
-        }
-
-        public async Task<SearchResult> GetSearchResult(string query, int? maxAmount) =>
-            await AggregateSearchResults(GetNonNormalizedLogics(), new SearchParameters(query, maxAmount));
-
-        public async Task<SearchResult> GetNormalizedSearchResult(string query, int? maxAmount) =>
-            await AggregateSearchResults(GetNormalizedLogics(), new SearchParameters(query, maxAmount));
-
-        private void InitializeSearchLogics()
-        {
             var databases = new List<IDatabase>
             {
                 new Database("postgres"),
                 new Database("postgresadd")
             };
 
-            foreach (var database in databases)
-            {
-                searchLogics.AddRange(SearchFactory.CreateSearchLogics(database));
-            }
+            searchLogics.AddRange(databases.SelectMany(SearchFactory.CreateSearchLogics));
         }
+
+        public async Task<SearchResult> GetSearchResult(string query, int? maxAmount) =>
+            await AggregateSearchResults(GetNonNormalizedLogics(), new SearchParameters(false, query, maxAmount));
+
+        public async Task<SearchResult> GetNormalizedSearchResult(string query, int? maxAmount) =>
+            await AggregateSearchResults(GetNormalizedLogics(), new SearchParameters(true, query, maxAmount));
 
         private async Task<SearchResult> AggregateSearchResults(IEnumerable<ISearchLogic> searchLogics, SearchParameters parameters)
         {
