@@ -1,9 +1,23 @@
 version: '3.7'
 services:
+  postgredb:
+      container_name: postgredb
+      image: postgres
+      restart: always
+      environment:
+        POSTGRES_PASSWORD: example
+      volumes:
+        - ./data:/var/lib/postgresql/data
+      ports:
+        - 5432:5432
+      expose:
+        - 5432
   SearchApi:
       image: search-api:latest
       environment:
         POSTGRES_HOST: postgredb
+      depends_on:
+      - postgredb
       expose:
       - "80"
   nginx:
@@ -14,15 +28,3 @@ services:
       - SearchApi
       ports:
       - "4000:4000"
-  postgredb:
-    container_name: postgredb
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: example
-    volumes:
-      - ./data:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    expose:
-      - 5432
